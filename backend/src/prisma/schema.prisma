@@ -25,7 +25,7 @@ model Worker {
 
 model Task {
   id            Int          @id @default(autoincrement())
-  title         String       @default("Select the most clickable thumbnail")
+  title         String?      @default("Select the most clickable thumbnail")
   option        Option[]
   user_id       Int
   user          User         @relation(fields: [user_id], references: [id])
@@ -37,11 +37,11 @@ model Task {
 model Option {
   id         Int          @id @default(autoincrement())
   image_url  String
-  option_id  Int
-  option     User         @relation(fields: [option_id], references: [id])
   task_id    Int
   task       Task         @relation(fields: [task_id], references: [id])
   submission Submission[]
+  user       User?        @relation(fields: [userId], references: [id])
+  userId     Int?
 }
 
 model Submission {

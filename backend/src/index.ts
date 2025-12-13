@@ -1,12 +1,22 @@
 import express from "express";
-const app = express();
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+
 import userRouter from "./routers/user.js";
 import workerRouter from "./routers/worker.js";
 
-app.use(express.json());
+dotenv.config();
 
-// user routers
+const PORT = process.env.PORT || 4000;
+
+const app = express();
+app.use(express.json()); // it help in parsing the user's data middleware
+app.use(cookieParser());
+
+// routers
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/worker", workerRouter);
 
-app.listen(3000);
+app.listen(PORT, () => {
+  console.log(`Server running successfully at: https://localhost:${PORT}`);
+});
