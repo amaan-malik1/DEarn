@@ -8,17 +8,16 @@ datasource db {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  address String   @unique
-  options Option[]
+  id      Int       @id @default(autoincrement())
+  address String    @unique
   tasks   Task[]
+  payouts Payouts[]
 }
 
 model Worker {
   id             Int          @id @default(autoincrement())
   address        String
   submission     Submission[]
-  balance_id     Int
   pending_amount Int
   locked_amount  Int
 }
@@ -26,12 +25,13 @@ model Worker {
 model Task {
   id            Int          @id @default(autoincrement())
   title         String?      @default("Select the most clickable thumbnail")
-  option        Option[]
+  options       Option[]
   user_id       Int
+  pay_signature String
+  amount        Int
+  done          Boolean      @default(false)
   user          User         @relation(fields: [user_id], references: [id])
   submission    Submission[]
-  pay_signature String
-  amount        String
 }
 
 model Option {
@@ -40,8 +40,6 @@ model Option {
   task_id    Int
   task       Task         @relation(fields: [task_id], references: [id])
   submission Submission[]
-  user       User?        @relation(fields: [userId], references: [id])
-  userId     Int?
 }
 
 model Submission {
@@ -52,6 +50,23 @@ model Submission {
   option         Option   @relation(fields: [option_id], references: [id])
   task_id        Int
   task           Task     @relation(fields: [task_id], references: [id])
-  amount_to_paid String
+  amount_to_paid Int
   created_at     DateTime
+
+  @@unique([worker_id, task_id])
+}
+
+model Payouts {
+  id      Int  @id @default(autoincrement())
+  user_id Int
+  user    User @relation(fields: [user_id], references: [id])
+  amount  Int
+  signature String
+  status    TxnStatus
+}
+
+enum TxnStatus {
+  Processing
+  Success
+  Failure
 }

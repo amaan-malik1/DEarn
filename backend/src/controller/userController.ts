@@ -1,18 +1,21 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import dotenv from "dotenv";
-
-import { PrismaClient } from "../generated/prisma/client.js";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createTaskInput } from "../utils/types.js";
+import { withAccelerate } from "@prisma/extension-accelerate";
+import { PrismaClient } from "../generated/prisma/client.js";
 
 dotenv.config();
 
-//@ts-ignore
-const prismaClient = new PrismaClient();
+const DATABASE_URL = process.env.DATABASE_URL;
+const prismaClient = new PrismaClient({
+  accelerateUrl: DATABASE_URL as string,
+}).$extends(withAccelerate());
 
-const JWT_SECRET_USER = process.env.JWT_SECRET_USER || "user894fun8s893fjs90";
+const JWT_SECRET = process.env.JWT_SECRET_USER;
+
 const DEFAULT_TITLE = "Select the most clickable thumbnail";
 
 const s3Client = new S3Client({
@@ -41,11 +44,15 @@ export const signin = async (req: Request, res: Response) => {
   });
 
   if (userExisted) {
-    const payload = {
-      userId: userExisted.id,
-    };
+    // const payload = {
+    //   ,
+    // };
 
-    const token = jwt.sign(payload, JWT_SECRET_USER);
+    if (!JWT_SECRET) {
+      return console.log("JWT_SECRET not loaded!");
+    }
+
+    const token = jwt.sign({ userId: userExisted.id }, JWT_SECRET);
 
     //token return
 
@@ -62,12 +69,10 @@ export const signin = async (req: Request, res: Response) => {
         address: userWalletAddress,
       },
     });
-    const payload = {
-      userId: newUser.id,
-      address: newUser.address,
-    };
+    // const payload = {};
 
-    const token = jwt.sign(payload, JWT_SECRET);
+    //@ts-ignore
+    const token = jwt.sign({ userId: newUser.id }, JWT_SECRET);
 
     res.cookie("jwt", token, {
       maxAge: 3 * 24 * 60 * 60 * 1000, //in milisec
@@ -118,21 +123,21 @@ export const createTask = async (req: Request, res: Response) => {
     });
   }
 
-  prismaClient.$transaction(async (tx) => {
+  prismaClient.$transaction(async (tx: any) => {
     const response = await tx.task.create({
       data: {
         title: parseData.data.title ?? DEFAULT_TITLE,
-        amount: "1",
+        amount: 1,
         pay_signature: parseData.data.signature,
         user_id: userId,
       },
     });
 
     await tx.option.createMany({
-      data:parseData.data.options.map(x=>{
-        image_url:x.imgageUrl,
-        task_id:response.id,
-      })
-    })
+      data: parseData.data.options.map((x) => ({
+        image_url: x.imgageUrl,
+        task_id: response.id,
+      })),
+    });
   });
 };

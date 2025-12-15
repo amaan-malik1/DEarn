@@ -1,12 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
-import { PrismaClient } from "../generated/prisma/client.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { PrismaClient } from "../generated/prisma/client.js";
 
 dotenv.config();
 
+//@ts-ignore
 const prismaClient = new PrismaClient();
-const JWT_SECRET_USER = process.env.JWT_SECRET_USER || " ";
+const JWT_SECRET = process.env.JWT_SECRET_USER;
 
 export const authRoute = async (
   req: Request,
@@ -20,7 +21,8 @@ export const authRoute = async (
       return res.json({ message: "Unauthorized - No token provided" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET_USER);
+    //@ts-ignore
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     if (!decoded) {
       return res.status(401).json({
