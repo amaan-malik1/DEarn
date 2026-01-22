@@ -1,11 +1,17 @@
 import express from "express";
-import { createTask, getPresignURL, signin } from "../controller/userController.js";
+import {
+  createTask,
+  getPresignURL,
+  getTask,
+  signin,
+} from "../controller/userController.js";
 import { authRoute } from "../middleware/authRoute.js";
 
 const router = express.Router();
 
 router.post("/signin", signin);
-router.get("/getPresignedURL",authRoute, getPresignURL);
-router.get("/createTask",authRoute, createTask);
+router.get("/getPresignedURL", authRoute, getPresignURL);
+router.post("/createTask", authRoute, createTask);
+router.get("/getTask", authRoute, getTask);
 
 export default router;

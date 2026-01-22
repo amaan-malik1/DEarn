@@ -141,3 +141,37 @@ export const createTask = async (req: Request, res: Response) => {
     });
   });
 };
+
+export const getTask = async (req: Request, res: Response) => {
+  const taskId = req.query.task_Id;
+  //@ts-ignore
+  const userId = req.user.id;
+
+  const taskDetails = await prismaClient.task.findFirst({
+    where: {
+      user_id: userId,
+      //@ts-ignore
+      taskId: taskId,
+    },
+  });
+
+  if (!taskDetails) {
+    return res.status(411).json({
+      message: "You don't have access to thsi task",
+    });
+  }
+
+  ///TODO: Try to make it faster
+  const responses = await prismaClient.submission.findMany({
+    where: {
+      task_id: Number(taskId),
+    },
+    include: {
+      task: true,
+    },
+  });
+
+  const result = {};
+
+  responses.forEach();
+};
